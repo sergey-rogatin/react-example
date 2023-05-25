@@ -1,0 +1,1 @@
+export { ConfettiAnimation } from './ConfettiAnimation';

@@ -1,10 +1,12 @@
 import React from "react";
 import { Button } from "./components/Button/Button";
+import { ConfettiAnimation } from "./components/ConfettiAnimation";
+import styles from "./App.module.css";
 
 export const App = () => {
   return (
     <div>
-      Hello fdsfdf world <Button text="jfdkfjdk" />
+      <ConfettiAnimation isLooping={true} className={styles.confetti} />
     </div>
   );
 };
