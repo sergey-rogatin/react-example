@@ -1,3 +1,4 @@
+import { Stage } from "./ConfettiAnimation";
 import {
   BezierCurve,
   getBezierCoordinates,
@@ -25,29 +26,50 @@ export interface ConfettiParticle {
   wobbleY: number;
 }
 
-export function createConfettiParticle() {
+export function createConfettiParticle(stage: Stage) {
   const CYAN = "rgb(124,224,195)";
   const RED = "rgb(232,59,99)";
   const PINK = "rgb(169,46,245)";
   const YELLOW = "rgb(243,222,79)";
   const BLUE = "rgb(90,179,249)";
 
-  const color = getRandomItem([CYAN, RED, PINK, YELLOW, BLUE]);
-  const curve = getRandomCurveOnCircle(vector2(0, 0), 1);
-  const rotationSpeed = getRandomFloat(-Math.PI * 8, Math.PI * 8);
-  const scaleX = 1 + getRandomFloat(-0.5, 0.5);
-  const scaleY = 1 + getRandomFloat(-0.5, 0.5);
-  const wobbleX = getRandomFloat(0.1, 0.5);
-  const wobbleY = getRandomFloat(0.1, 0.5);
-  const type = getRandomItem([
-    ConfettiParticleType.CIRCLE,
-    ConfettiParticleType.RECTANGLE,
-    ConfettiParticleType.TRIANGLE,
-  ]);
+  let color = "orange"; // getRandomItem([CYAN, RED, PINK, YELLOW, BLUE]);
+  let curve = getRandomCurveOnCircle(vector2(0, 0), 1);
+  let rotationSpeed = 0; // getRandomFloat(-Math.PI * 8, Math.PI * 8);
+  let scaleX = 1; // 1 + getRandomFloat(-0.5, 0.5);
+  let scaleY = 1; // + getRandomFloat(-0.5, 0.5);
+  let wobbleX = 0; // getRandomFloat(0.1, 0.5);
+  let wobbleY = 0; // getRandomFloat(0.1, 0.5);
+  let type = ConfettiParticleType.CIRCLE;
+  //getRandomItem([ConfettiParticleType.CIRCLE,ConfettiParticleType.RECTANGLE,ConfettiParticleType.TRIANGLE,]);
+  let progressOffset = 0; //getRandomFloat(-0.3, 0);
+
+  if (stage >= Stage.DRAW_SHAPES) {
+    type = getRandomItem([
+      ConfettiParticleType.CIRCLE,
+      ConfettiParticleType.RECTANGLE,
+      ConfettiParticleType.TRIANGLE,
+    ]);
+  }
+  if (stage >= Stage.DRAW_COLORS) {
+    color = getRandomItem([CYAN, RED, PINK, YELLOW, BLUE]);
+  }
+  if (stage >= Stage.TIMING_OFFSET) {
+    progressOffset = getRandomFloat(-0.3, 0);
+  }
+  if (stage >= Stage.ROTATION) {
+    rotationSpeed = getRandomFloat(-Math.PI * 8, Math.PI * 8);
+  }
+  if (stage >= Stage.SIZE_WOBBLE) {
+    scaleX = 1 + getRandomFloat(-0.5, 0.5);
+    scaleY = 1 + getRandomFloat(-0.5, 0.5);
+    wobbleX = getRandomFloat(0.1, 0.5);
+    wobbleY = getRandomFloat(0.1, 0.5);
+  }
 
   const particle: ConfettiParticle = {
     type,
-    progressOffset: getRandomFloat(-0.3, 0),
+    progressOffset,
     color,
     rotationSpeed,
     scaleX,
@@ -65,15 +87,23 @@ export function drawParticle(
   particle: ConfettiParticle,
   externalProgress: number,
   circleRadius: number,
-  particleSize: number
+  particleSize: number,
+  stage: Stage
 ) {
   const progress = externalProgress + particle.progressOffset;
   if (progress < 0) {
     return;
   }
 
-  const opacityFactor = Math.max(0, 1 - (progress * 2.5 - 1) ** 4);
-  const bezierFactor = (progress / (progress + 0.1)) * 1.1;
+  let opacityFactor = 1; // Math.max(0, 1 - (progress * 2.5 - 1) ** 4);
+  let bezierFactor = progress; // (progress / (progress + 0.1)) * 1.1;
+  if (stage >= Stage.MOVEMENT_SPEED_FUNCTION) {
+    bezierFactor = (progress / (progress + 0.1)) * 1.1;
+  }
+  if (stage >= Stage.OPACITY_FUNCTION) {
+    opacityFactor = Math.max(0, 1 - (progress * 2.5 - 1) ** 4);
+  }
+
   const { x, y } = getBezierCoordinates(particle.curve, bezierFactor);
 
   ctx.save();

@@ -10,12 +10,18 @@ export interface BezierCurve {
   d: Vector2;
 }
 
+let random = Math.random;
+
+export function setRandomGenerator(generator: () => number) {
+  random = generator;
+}
+
 export function getRandomFloat(min: number, max: number) {
-  return Math.random() * (max - min) + min;
+  return random() * (max - min) + min;
 }
 
 export const getRandomInt = (min: number, max: number) => {
-  const result = min + Math.floor(Math.random() * (max + 1));
+  const result = min + Math.floor(random() * (max + 1));
   return result;
 };
 
@@ -74,10 +80,13 @@ export function drawCircle(
   radius: number,
   color: string
 ) {
+  ctx.save();
+  ctx.strokeStyle = color;
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
 }
 
 export function getRandomCurveOnCircle(center: Vector2, radius: number) {
@@ -108,7 +117,7 @@ export function drawBezierCurve(
   { a: p0, b: c0, c: c1, d: p1 }: BezierCurve
 ) {
   ctx.strokeStyle = "green";
-  ctx.lineWidth = 0.001;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(p0.x, p0.y);
   ctx.bezierCurveTo(c0.x, c0.y, c1.x, c1.y, p1.x, p1.y);
