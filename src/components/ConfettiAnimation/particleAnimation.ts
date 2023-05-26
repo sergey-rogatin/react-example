@@ -82,6 +82,10 @@ export function createConfettiParticle(stage: Stage) {
   return particle;
 }
 
+let gravitySpeed = 0;
+let bigG = 0.9;
+const floor = 1;
+
 export function drawParticle(
   ctx: CanvasRenderingContext2D,
   particle: ConfettiParticle,
@@ -97,14 +101,24 @@ export function drawParticle(
 
   let opacityFactor = 1; // Math.max(0, 1 - (progress * 2.5 - 1) ** 4);
   let bezierFactor = progress; // (progress / (progress + 0.1)) * 1.1;
+  if (stage < Stage.MOVEMENT_SPEED_FUNCTION) {
+    bezierFactor = Math.min(progress, 1);
+  }
   if (stage >= Stage.MOVEMENT_SPEED_FUNCTION) {
     bezierFactor = (progress / (progress + 0.1)) * 1.1;
   }
   if (stage >= Stage.OPACITY_FUNCTION) {
     opacityFactor = Math.max(0, 1 - (progress * 2.5 - 1) ** 4);
+    // opacityFactor = Math.max(0, 10 - (progress * 2.5 - 1) ** 4);
   }
 
-  const { x, y } = getBezierCoordinates(particle.curve, bezierFactor);
+  let { x, y } = getBezierCoordinates(particle.curve, bezierFactor);
+  // y += gravitySpeed;
+  // gravitySpeed = bigG * progress ** 2;
+
+  // if (y > floor) {
+  //   y = floor;
+  // }
 
   ctx.save();
 

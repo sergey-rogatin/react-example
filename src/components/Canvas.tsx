@@ -59,6 +59,9 @@ export const Canvas = ({
       const deltaTime = (curTime - prevTime) / 1000;
       prevTime = curTime;
       onLoop({ canvas, ctx, deltaTime, mouse: mouse.current });
+
+      mouse.current.left.wentUp = false;
+      mouse.current.left.wentDown = false;
       requestAnimationFrame(loopWrapper);
     };
     const request = requestAnimationFrame(loopWrapper);
@@ -105,9 +108,23 @@ export const Canvas = ({
         canvas.height * 0.5;
     };
 
+    const handleMouseDown = (e: MouseEvent) => {
+      mouse.current.left.wentDown = true;
+      mouse.current.left.isDown = true;
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      mouse.current.left.wentUp = true;
+      mouse.current.left.isDown = false;
+    };
+
     window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
 

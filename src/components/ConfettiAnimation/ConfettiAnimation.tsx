@@ -30,9 +30,7 @@ export interface ConfettiAnimationProps {
 }
 
 export enum Stage {
-  LERP_DOTS,
   LERP_LINE,
-  QUADRATIC_BEZIER_DOTS,
   QUADRATIC_BEZIER_LINES,
   QUADRATIC_BEZIER_LERPS_1,
   QUADRATIC_BEZIER_LERPS_2,
@@ -67,7 +65,7 @@ export enum Stage {
   FULL_ANIMATION,
 }
 
-let stage = Stage.ROTATION;
+let stage = Stage.LERP_LINE;
 
 let pointA: Vector2 = { x: -450, y: 100 };
 let pointB: Vector2 = { x: 500, y: -100 };
@@ -75,7 +73,37 @@ let pointC: Vector2 = { x: -100, y: -400 };
 let pointD: Vector2 = { x: 100, y: 400 };
 let t = 0;
 
+let dragged: Vector2 = null;
+
+function pointInRadius(
+  x: number,
+  y: number,
+  pX: number,
+  pY: number,
+  r: number
+) {
+  return (pX - x) ** 2 + (pY - y) ** 2 < r ** 2;
+}
+
 let timeSpeed = 0.01;
+let paused = true;
+
+const slider = document.createElement("input");
+slider.type = "range";
+document.body.appendChild(slider);
+slider.min = "0";
+slider.max = "1";
+slider.step = "0.001";
+slider.value = t.toString();
+slider.oninput = () => {
+  paused = true;
+  t = parseFloat(slider.value);
+};
+
+function setTime(newT: number) {
+  t = newT;
+  slider.value = newT.toString();
+}
 
 export const ConfettiAnimation = ({
   className,
@@ -107,16 +135,18 @@ export const ConfettiAnimation = ({
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
         stage++;
-        t = 0;
+        setTime(0);
         initAnimation({} as any);
       } else if (e.key === "ArrowLeft") {
         stage--;
-        t = 0;
+        setTime(0);
         initAnimation({} as any);
       } else if (e.key === "ArrowUp") {
         timeSpeed += 0.001;
       } else if (e.key === "ArrowDown") {
         timeSpeed -= 0.001;
+      } else if (e.key === " ") {
+        paused = !paused;
       }
     };
     window.addEventListener("keyup", handleKeyUp);
@@ -146,6 +176,31 @@ export const ConfettiAnimation = ({
       ) {
         drawCircle(ctx, pointA, 10, "green");
         drawCircle(ctx, pointB, 10, "green");
+
+        if (mouse.left.wentDown) {
+          if (pointInRadius(mouse.x, mouse.y, pointA.x, pointA.y, 10)) {
+            dragged = pointA;
+          }
+          if (pointInRadius(mouse.x, mouse.y, pointB.x, pointB.y, 10)) {
+            dragged = pointB;
+          }
+          if (pointInRadius(mouse.x, mouse.y, pointC.x, pointC.y, 10)) {
+            dragged = pointC;
+          }
+          if (pointInRadius(mouse.x, mouse.y, pointD.x, pointD.y, 10)) {
+            dragged = pointD;
+          }
+        }
+
+        if (dragged) {
+          dragged.x = mouse.x;
+          dragged.y = mouse.y;
+        }
+
+        if (mouse.left.wentUp) {
+          dragged = null;
+        }
+
         ctx.lineWidth = 4;
         ctx.strokeStyle = "green";
 
@@ -157,7 +212,7 @@ export const ConfettiAnimation = ({
           ctx.stroke();
         }
 
-        if (stage >= Stage.QUADRATIC_BEZIER_DOTS) {
+        if (stage >= Stage.QUADRATIC_BEZIER_LINES) {
           drawCircle(ctx, pointC, 10, "green");
         }
 
@@ -312,7 +367,7 @@ export const ConfettiAnimation = ({
         if (t < 0) {
           t = 1;
         }
-        t += timeSpeed;
+        if (!paused) setTime(t + timeSpeed);
       }
 
       if (stage >= Stage.CIRCLE && stage < Stage.DRAW_PARTICLES) {
@@ -400,7 +455,7 @@ export const ConfettiAnimation = ({
         if (t < 0) {
           t = 1;
         }
-        t += timeSpeed;
+        if (!paused) setTime(t + timeSpeed);
       }
 
       if (stage >= Stage.DRAW_PARTICLES) {
@@ -421,12 +476,13 @@ export const ConfettiAnimation = ({
         });
 
         if (t > 1.2) {
+          // if (t > 2) {
           t = 0;
         }
         if (t < 0) {
           t = 1;
         }
-        t += timeSpeed;
+        if (!paused) setTime(t + timeSpeed);
       }
 
       ctx.restore();
